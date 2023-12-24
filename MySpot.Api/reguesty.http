@@ -1,0 +1,21 @@
+@url =https://localhost:7193
+@reservationId = 0
+
+GET {{url}}/reservations/get
+
+###
+GET {{url}}/reservations/{{reservationId}}
+
+###
+
+POST {{url}}/reservations/apiPost
+Content-Type: application/json
+
+{
+    
+    "EmployeeName" : "Patryk",
+    "ParkingSpotNAme" : "P1",
+    "LicensePlate" : "LLU9202A"
+
+}
+
