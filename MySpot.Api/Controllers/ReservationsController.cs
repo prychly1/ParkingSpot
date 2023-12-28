@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using MySpot.Api.models;
+using MySpot.Api.Services;
 
 namespace MySpot.Api.Controllers
 
@@ -9,48 +10,34 @@ namespace MySpot.Api.Controllers
     [Route("reservations")]
     public class ReservationsController : ControllerBase
     {
-        private static int _id;
-        private static readonly List<Reservation> _reservations = new();
-        private static readonly List<string> _parkingSpotName = new()
-        {
-            "P1", "P2", "P3", "P4", "P5"
-        };
+        private readonly ReservationServices _service = new();
+
+
 
         [HttpGet("get")]
-        public ActionResult<Reservation> Get() => Ok(_reservations);
+        public ActionResult<Reservation> Get() => Ok(_service.GetAll());
 
         [HttpGet("{_id:int}")]
         public ActionResult<Reservation> Get2(int id)
         {
-            var reservation = _reservations.SingleOrDefault(x => x.Id == id);
-            if (reservation == null)
+
+            var resrervation = _service.Get(id);
+            if(resrervation == null)
             {
                 return NotFound();
             }
-            return Ok(reservation);
+            return Ok(resrervation);
         }
      
         [HttpPost("apiPost")]
         public ActionResult Post (Reservation reservation) 
         {
-            if(_parkingSpotName.All(x=> x != reservation.ParkingSpotNAme))
+            var id = _service.Create(reservation);
+            if(id is null)
             {
                 return BadRequest();
             }
-            reservation.date = DateTime.UtcNow.AddDays(1).Date;
-            var reservationAlreadyExists = _reservations.Any(x => x.ParkingSpotNAme == reservation.ParkingSpotNAme
-            && x.date.Date == reservation.date.Date);
-
-            if(reservationAlreadyExists)
-            {
-                
-                return BadRequest();
-
-            }
-
-            reservation.Id = _id;
-            _id++;
-            _reservations.Add(reservation);
+            
             return CreatedAtAction(nameof(Get),new {id = reservation.Id}, null);
 
         }
@@ -59,27 +46,18 @@ namespace MySpot.Api.Controllers
 
         public ActionResult Put(Reservation reservation, int id)
         {
-            var existingReservation = _reservations.SingleOrDefault(x => x.Id == id);
-            if (existingReservation == null)
+            if(_service.Update(id, reservation))
             {
-                return NotFound();
+                return NoContent();
             }
-            existingReservation.LicensePlate = reservation.LicensePlate;
-
             return NoContent();
         }
 
         [HttpDelete("{id:int}")]
         public ActionResult Delete(int id)
         {
-            var existingReservation = _reservations.SingleOrDefault(x => x.Id == id);
-            if (existingReservation == null)
-            {
-                return NotFound();
-            }
             
-            _reservations.Remove(existingReservation);
-
+            _service.Delete(id);
             return NoContent();
 
 
